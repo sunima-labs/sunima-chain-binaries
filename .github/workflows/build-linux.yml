@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     
     steps:
@@ -30,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y gcc libc6-dev make git
+          sudo apt-get install -y gcc libc6-dev make git file
       
       - name: Fix go.mod for CI (remove local replace)
         working-directory: sunima-source
@@ -63,10 +63,10 @@ jobs:
         run: |
           go build -o sunimad-linux-amd64 ./cmd/sunimad
       
-      - name: Verify binary
+      - name: Verify binary is ELF
         working-directory: sunima-source
         run: |
-          file sunimad-linux-amd64
+          file sunimad-linux-amd64 | grep -q "ELF 64-bit LSB executable, x86-64" || (echo "ERROR: Binary is not Linux ELF x86-64" && file sunimad-linux-amd64 && exit 1)
           sha256sum sunimad-linux-amd64 > sunimad-linux-amd64.sha256
           cat sunimad-linux-amd64.sha256
       
