@@ -22,12 +22,19 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.23'
+          go-version: '1.25'
           
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc libc6-dev make git
+      
+      - name: Fix go.mod for CI (remove local replace)
+        run: |
+          # Remove local replace directive for cosmos/evm
+          sed -i '/github.com\/cosmos\/evm => \/Users\/acteq\/cosmos-evm-fork/d' go.mod
+          # Add proper replace
+          sed -i '/github.com\/cosmos\/cosmos-sdk =>/a \    github.com/cosmos/evm => github.com/cosmos/evm v0.2.0' go.mod
       
       - name: Cache Go modules
         uses: actions/cache@v4
@@ -48,8 +55,6 @@ jobs:
           GOOS: linux
           GOARCH: amd64
         run: |
-          # The libkzg_ffi.so needs to be available
-          # For now we'll build without it and see if it works
           go build -o sunimad-linux-amd64 ./cmd/sunimad
       
       - name: Verify binary
