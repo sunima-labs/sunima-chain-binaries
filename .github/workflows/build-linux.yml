@@ -22,6 +22,21 @@ jobs:
           submodules: recursive
           path: sunima-source
       
+      - name: Debug - Show OS
+        run: |
+          echo "Runner OS: $(uname -a)"
+          echo "Go version: $(go version)"
+          echo "GOOS: $GOOS"
+          echo "GOARCH: $GOARCH"
+      
+      - name: Checkout source (sunima-chain)
+        uses: actions/checkout@v4
+        with:
+          repository: sunima-labs/sunima-chain
+          token: ${{ secrets.PAT_TOKEN }}
+          submodules: recursive
+          path: sunima-source
+      
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -66,7 +81,10 @@ jobs:
       - name: Verify binary is ELF
         working-directory: sunima-source
         run: |
-          file sunimad-linux-amd64 | grep -q "ELF 64-bit LSB executable, x86-64" || (echo "ERROR: Binary is not Linux ELF x86-64" && file sunimad-linux-amd64 && exit 1)
+          echo "=== file output ==="
+          file sunimad-linux-amd64
+          echo "=== checking for ELF ==="
+          file sunimad-linux-amd64 | grep -q "ELF 64-bit LSB executable, x86-64" || (echo "ERROR: Binary is not Linux ELF x86-64" && exit 1)
           sha256sum sunimad-linux-amd64 > sunimad-linux-amd64.sha256
           cat sunimad-linux-amd64.sha256
       
