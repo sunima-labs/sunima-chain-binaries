@@ -14,10 +14,13 @@ jobs:
     timeout-minutes: 60
     
     steps:
-      - name: Checkout
+      - name: Checkout source (sunima-all)
         uses: actions/checkout@v4
         with:
+          repository: sunima-labs/sunima-all
+          token: ${{ secrets.GITHUB_TOKEN }}
           submodules: recursive
+          path: sunima-source
       
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -30,6 +33,7 @@ jobs:
           sudo apt-get install -y gcc libc6-dev make git
       
       - name: Fix go.mod for CI (remove local replace)
+        working-directory: sunima-source
         run: |
           # Remove local replace directive for cosmos/evm
           sed -i '/github.com\/cosmos\/evm => \/Users\/acteq\/cosmos-evm-fork/d' go.mod
@@ -47,9 +51,11 @@ jobs:
             ${{ runner.os }}-go-
       
       - name: Download dependencies
+        working-directory: sunima-source
         run: go mod download
       
       - name: Build Linux binary
+        working-directory: sunima-source
         env:
           CGO_ENABLED: 1
           GOOS: linux
@@ -58,18 +64,30 @@ jobs:
           go build -o sunimad-linux-amd64 ./cmd/sunimad
       
       - name: Verify binary
+        working-directory: sunima-source
         run: |
           file sunimad-linux-amd64
           sha256sum sunimad-linux-amd64 > sunimad-linux-amd64.sha256
           cat sunimad-linux-amd64.sha256
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binary
+          path: |
+            sunima-source/sunimad-linux-amd64
+            sunima-source/sunimad-linux-amd64.sha256
+          retention-days: 7
       
       - name: Create Release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
-            sunimad-linux-amd64
-            sunimad-linux-amd64.sha256
+            sunima-source/sunimad-linux-amd64
+            sunima-source/sunimad-linux-amd64.sha256
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
