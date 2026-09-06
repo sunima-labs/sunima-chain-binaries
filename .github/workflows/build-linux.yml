@@ -14,11 +14,11 @@ jobs:
     timeout-minutes: 60
     
     steps:
-      - name: Checkout source (sunima-all)
+      - name: Checkout source (sunima-chain)
         uses: actions/checkout@v4
         with:
-          repository: sunima-labs/sunima-all
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: sunima-labs/sunima-chain
+          token: ${{ secrets.PAT_TOKEN }}
           submodules: recursive
           path: sunima-source
       
@@ -69,15 +69,6 @@ jobs:
           file sunimad-linux-amd64
           sha256sum sunimad-linux-amd64 > sunimad-linux-amd64.sha256
           cat sunimad-linux-amd64.sha256
-      
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-binary
-          path: |
-            sunima-source/sunimad-linux-amd64
-            sunima-source/sunimad-linux-amd64.sha256
-          retention-days: 7
       
       - name: Create Release
         uses: softprops/action-gh-release@v2
