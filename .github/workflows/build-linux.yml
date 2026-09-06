@@ -14,20 +14,14 @@ jobs:
     timeout-minutes: 60
     
     steps:
-      - name: Checkout source (sunima-chain)
-        uses: actions/checkout@v4
-        with:
-          repository: sunima-labs/sunima-chain
-          token: ${{ secrets.PAT_TOKEN }}
-          submodules: recursive
-          path: sunima-source
-      
       - name: Debug - Show OS
         run: |
-          echo "Runner OS: $(uname -a)"
-          echo "Go version: $(go version)"
-          echo "GOOS: $GOOS"
-          echo "GOARCH: $GOARCH"
+          echo "=== Runner Info ==="
+          uname -a
+          echo "GOOS=$GOOS"
+          echo "GOARCH=$GOARCH"
+          echo "Runner OS: $RUNNER_OS"
+          echo "Runner Arch: $RUNNER_ARCH"
       
       - name: Checkout source (sunima-chain)
         uses: actions/checkout@v4
@@ -83,10 +77,25 @@ jobs:
         run: |
           echo "=== file output ==="
           file sunimad-linux-amd64
-          echo "=== checking for ELF ==="
-          file sunimad-linux-amd64 | grep -q "ELF 64-bit LSB executable, x86-64" || (echo "ERROR: Binary is not Linux ELF x86-64" && exit 1)
+          echo "=== Checking for ELF ==="
+          if file sunimad-linux-amd64 | grep -q "ELF 64-bit LSB executable, x86-64"; then
+            echo "SUCCESS: Binary is Linux ELF x86-64"
+          else
+            echo "ERROR: Binary is NOT Linux ELF x86-64"
+            file sunimad-linux-amd64
+            exit 1
+          fi
           sha256sum sunimad-linux-amd64 > sunimad-linux-amd64.sha256
           cat sunimad-linux-amd64.sha256
+      
+      - name: Upload binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-binary
+          path: |
+            sunima-source/sunimad-linux-amd64
+            sunima-source/sunimad-linux-amd64.sha256
+          retention-days: 7
       
       - name: Create Release
         uses: softprops/action-gh-release@v2
