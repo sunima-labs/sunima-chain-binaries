@@ -44,9 +44,7 @@ jobs:
       - name: Fix go.mod for CI (remove local replace)
         working-directory: sunima-source
         run: |
-          # Remove local replace directive for cosmos/evm
           sed -i '/github.com\/cosmos\/evm => \/Users\/acteq\/cosmos-evm-fork/d' go.mod
-          # Add proper replace
           sed -i '/github.com\/cosmos\/cosmos-sdk =>/a \    github.com/cosmos/evm => github.com/cosmos/evm v0.2.0' go.mod
       
       - name: Cache Go modules
@@ -70,7 +68,7 @@ jobs:
           GOOS: linux
           GOARCH: amd64
         run: |
-          go build -o sunimad-linux-amd64 ./cmd/sunimad
+          go build -trimpath -ldflags="-s -w" -o sunimad-linux-amd64 ./cmd/sunimad
       
       - name: Verify binary is ELF
         working-directory: sunima-source
